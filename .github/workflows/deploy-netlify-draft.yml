@@ -1,5 +1,6 @@
 name: Deploy Draft Site for Netlify
 
+# CI実行条件
 on:
   push:
     branches:
@@ -8,12 +9,14 @@ on:
       branches-ignore:
         - main
 
+# permissions設定
 permissions:
   contents: write
   pull-requests: write
   statuses: write
   deployments: write
 
+#インストール〜ビルド
 jobs:
   build-and-deploy:
     runs-on: ubuntu-22.04
@@ -30,6 +33,7 @@ jobs:
 
       - run: yarn build:dev
 
+      # GitHub Deployment Environment名
       - name: Set GitHub Deployment Environment
         id: github_deployment_environment
         run: |
@@ -39,6 +43,7 @@ jobs:
             echo "GITHUB_DEPLOYMENT_ENVIRONMENT=Netlify Preview" >> "${GITHUB_OUTPUT}"
           fi
 
+      # Netilfyへデプロイ
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v1.2
         with:
@@ -52,4 +57,3 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID_DEV }}
-          echo test, and deploy your project.
