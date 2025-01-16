@@ -31,7 +31,7 @@ jobs:
 
       - run: yarn install
 
-      - run: yarn build:dev
+      - run: yarn build:draft
 
       # GitHub Deployment Environment名
       - name: Set GitHub Deployment Environment
