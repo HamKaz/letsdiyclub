@@ -1,59 +1,56 @@
-name: Deploy Draft Site for Netlify
+name: Deploy Draft Site by using Hexo to Netlify
 
-# CI実行条件
 on:
   push:
     branches:
       - draft
-#  pull_request:
-#      branches-ignore:
-#        - main
 
-# permissions設定
-permissions:
-  contents: write
-  pull-requests: write
-  statuses: write
-  deployments: write
+env:
+  TZ: Asia/Tokyo
 
 #インストール〜ビルド
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  build:
+    runs-on: ubuntu-20.04
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v2
         with:
-          node-version: latest
+          node-version: '12'
+          cache: 'npm'
 
-      - run: yarn install
+      - run: |
+          npm install hexo-cli -g
 
-      - run: yarn build:generate
+      - env:
+          HEXO_DEPLOY_PRI: ${{ secrets.HEXO_DEPLOY_PRI }}
+          USER_NAME: ${{ secrets.USER_NAME }}
+          USER_EMAIL: ${{ secrets.USER_EMAIL }}
 
-      # GitHub Deployment Environment名
-      - name: Set GitHub Deployment Environment
-        id: github_deployment_environment
-        run: |
-          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
-            echo "GITHUB_DEPLOYMENT_ENVIRONMENT=Netlify draft" >> "${GITHUB_OUTPUT}"
-          else
-            echo "GITHUB_DEPLOYMENT_ENVIRONMENT=Netlify Preview" >> "${GITHUB_OUTPUT}"
-          fi
+      - run: |
+          mkdir -p ~/.ssh/
+          echo "$HEXO_DEPLOY_PRI" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global user.name "USER_NAME"
+          git config --global user.email "USER_EMAIL"
+          
+      - run: |
+          npx hexo clean && npx hexo generate -deploy
 
-      # Netilfyへデプロイ
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v1.2
-        with:
-          publish-dir: './dist'
-          production-branch: draft
-          github-deployment-environment: ${{ steps.github_deployment_environment.outputs.GITHUB_DEPLOYMENT_ENVIRONMENT }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: ${{ github.event.head_commit.message || github.event.pull_request.title }}
-          alias: deploy-preview-${{ github.event.number }}
-          fails-without-credentials: true
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID_DEV }}
+# Netilfyへデプロイ
+#      - name: Deploy to Netlify
+#        uses: nwtgck/actions-netlify@v1.2
+#        with:
+#          publish-dir: './dist'
+#          production-branch: draft
+#          github-deployment-environment: ${{ steps.github_deployment_environment.outputs.GITHUB_DEPLOYMENT_ENVIRONMENT }}
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          deploy-message: ${{ github.event.head_commit.message || github.event.pull_request.title }}
+#          alias: deploy-preview-${{ github.event.number }}
+#          fails-without-credentials: true
+#        env:
+#          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+#          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID_DEV }}
