@@ -20,15 +20,14 @@ jobs:
           node-version: '12'
           cache: 'npm'
 
-      - run: |
-          npm install hexo-cli -g
+      - run: npm ci
 
       - env:
           HEXO_DEPLOY_PRI: ${{ secrets.HEXO_DEPLOY_PRI }}
           USER_NAME: ${{ secrets.USER_NAME }}
           USER_EMAIL: ${{ secrets.USER_EMAIL }}
 
-      - run: |
+        run: |
           mkdir -p ~/.ssh/
           echo "$HEXO_DEPLOY_PRI" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
