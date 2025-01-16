@@ -5,9 +5,9 @@ on:
   push:
     branches:
       - draft
-  pull_request:
-      branches-ignore:
-        - main
+#  pull_request:
+#      branches-ignore:
+#        - main
 
 # permissions設定
 permissions:
@@ -19,7 +19,7 @@ permissions:
 #インストール〜ビルド
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     
     steps:
@@ -27,11 +27,11 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18.12.1
+          node-version: latest
 
       - run: yarn install
 
-      - run: yarn build:draft
+      - run: yarn build:generate
 
       # GitHub Deployment Environment名
       - name: Set GitHub Deployment Environment
